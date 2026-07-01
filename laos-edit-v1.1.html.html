@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LAOS Edit v1.1 — Master Your Content</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;700&family=Noto+Sans+Lao:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pink:#ff6b9d;
+    --purple:#c0b0ff;
+    --gold:#ffd700;
+    --bg:#0a0a15;
+    --surface:#15121f;
+    --surface2:#1e1a2e;
+    --surface3:#262038;
+    --text:#f0f0f0;
+    --muted:#9b93b5;
+    --border:#332c4a;
+    --font-display:'Kanit',sans-serif;
+    --font-body:'Noto Sans Thai','Noto Sans Lao','Kanit',sans-serif;
+    --font-mono:'Space Grotesk',sans-serif;
+  }
+  body.light{
+    --bg:#f3f1fa; --surface:#ffffff; --surface2:#f6f3fd; --surface3:#eeeafa;
+    --text:#241f34; --muted:#6b6382; --border:#e0d9f5;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--font-body);transition:background .2s,color .2s;}
+  body{padding-bottom:60px;}
+  .wrap{max-width:880px;margin:0 auto;padding:0 16px;}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:16px;}
+  .back-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;}
+
+  header{
+    background:linear-gradient(160deg,var(--surface2),var(--surface));
+    border:1px solid var(--border);border-radius:18px;margin:0 16px 14px;padding:22px 20px 18px;
+    position:relative;overflow:hidden;
+  }
+  header:before{
+    content:'';position:absolute;top:-40%;right:-20%;width:220px;height:220px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,107,157,.25),transparent 70%);pointer-events:none;
+  }
+  .brand{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+  .brand-badge{
+    width:56px;height:56px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:28px;
+    background:radial-gradient(circle at 35% 30%,#3a1030,#160a1e);border:2px solid var(--pink);
+    box-shadow:0 0 18px rgba(255,107,157,.5);
+  }
+  .brand h1{
+    margin:0;font-family:var(--font-display);font-weight:800;font-size:26px;letter-spacing:.5px;
+    background:linear-gradient(90deg,var(--pink),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .brand .tagline{font-size:12px;color:var(--muted);font-family:var(--font-mono);margin-top:2px;}
+  .pill-row{display:flex;gap:10px;position:relative;z-index:1;}
+  .pill-btn{
+    display:flex;align-items:center;gap:8px;padding:11px 18px;border-radius:999px;
+    background:var(--surface2);border:1px solid var(--pink);color:var(--text);cursor:pointer;
+    font-family:var(--font-body);font-size:13px;font-weight:500;box-shadow:0 0 10px rgba(255,107,157,.15);
+  }
+  .pill-btn:hover{box-shadow:0 0 16px rgba(255,107,157,.4);}
+
+  .upload-btn{
+    margin:0 16px 14px;padding:22px;border-radius:16px;border:none;cursor:pointer;text-align:center;
+    background:linear-gradient(100deg,var(--pink),#ff9a56,var(--gold));color:#2a0a1a;
+    font-family:var(--font-display);font-weight:700;font-size:16px;letter-spacing:.3px;
+    box-shadow:0 6px 22px rgba(255,107,157,.35);width:calc(100% - 32px);
+  }
+  input[type=file]{display:none;}
+
+  .empty-state{
+    margin:0 16px 14px;padding:46px 20px;border-radius:16px;text-align:center;
+    background:var(--surface2);border:2px dashed var(--purple);
+  }
+  .empty-state .bolt{font-size:38px;filter:drop-shadow(0 0 10px rgba(255,215,0,.6));}
+  .empty-state .msg{margin-top:14px;color:var(--purple);font-weight:500;font-size:15px;}
+
+  .editor{display:none;}
+  .editor.active{display:block;}
+  .stage{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;margin:0 16px 14px;}
+  .canvas-frame{position:relative;width:100%;background:#000;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+  canvas{width:100%;height:auto;display:block;cursor:crosshair;}
+  .transport{display:flex;align-items:center;gap:12px;margin-top:12px;}
+  .play-btn{
+    width:42px;height:42px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--pink),var(--purple));
+    color:#1a0a14;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none;
+  }
+  .timecode{font-family:var(--font-mono);font-size:13px;color:var(--muted);white-space:nowrap;}
+  .seek{flex:1;}
+
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;background:var(--surface3);outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--pink);border:2px solid var(--bg);cursor:pointer;margin-top:-1px;}
+  input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--pink);border:2px solid var(--bg);cursor:pointer;}
+
+  .timeline{position:relative;height:34px;margin-top:14px;border-radius:6px;overflow:hidden;
+    background-image:repeating-linear-gradient(90deg,var(--surface3) 0 1px,transparent 1px 12px),var(--surface2);}
+  .timeline .trim-region{position:absolute;top:0;bottom:0;background:rgba(255,107,157,.22);border-left:2px solid var(--pink);border-right:2px solid var(--pink);}
+  .timeline .playhead{position:absolute;top:0;bottom:0;width:2px;background:var(--gold);}
+  .timeline .playhead:after{content:'';position:absolute;top:-1px;left:-4px;border:5px solid transparent;border-top-color:var(--gold);}
+
+  .tabs{display:flex;gap:6px;margin:0 16px 0;flex-wrap:wrap;}
+  .tab-btn{flex:1;min-width:76px;padding:10px 6px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;text-align:center;transition:.15s;}
+  .tab-btn .th{font-size:13px;font-weight:500;display:block;}
+  .tab-btn .lo{font-size:11px;color:var(--purple);display:block;margin-top:1px;}
+  .tab-btn.active{background:var(--surface2);border-color:var(--pink);color:var(--text);}
+
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;margin:10px 16px;padding:18px;display:none;}
+  .panel.active{display:block;}
+  .field{margin-bottom:18px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:8px;}
+  .field label .lo{color:var(--purple);font-size:11px;}
+  .field label .val{font-family:var(--font-mono);color:var(--text);}
+  .field input[type=text]{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface3);color:var(--text);font-family:var(--font-body);font-size:14px;}
+  .row{display:flex;gap:12px;}
+  .row .field{flex:1;}
+  input[type=color]{width:100%;height:40px;border:1px solid var(--border);border-radius:8px;background:var(--surface3);padding:2px;cursor:pointer;}
+
+  .upload-mini{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:10px;border:1px dashed var(--border);background:var(--surface3);color:var(--muted);cursor:pointer;font-size:13px;}
+  .upload-mini:hover{border-color:var(--pink);color:var(--text);}
+  .file-tag{margin-top:10px;font-size:12px;color:var(--purple);word-break:break-all;}
+
+  .overlay-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+  .overlay-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:8px;background:var(--surface3);border:1px solid var(--border);cursor:pointer;font-size:13px;}
+  .overlay-item.sel{border-color:var(--pink);}
+  .overlay-item .txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;margin-right:8px;}
+  .overlay-item .del{color:var(--muted);cursor:pointer;font-size:16px;line-height:1;}
+  .overlay-item .del:hover{color:var(--pink);}
+  .add-btn{width:100%;padding:11px;border-radius:8px;border:1px solid var(--border);background:var(--surface3);color:var(--purple);cursor:pointer;font-size:13px;font-weight:500;}
+  .add-btn:hover{border-color:var(--purple);}
+  .hint-small{font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5;}
+  .hint-small .lo{color:var(--purple);}
+
+  .filter-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px;}
+  .filter-chip{padding:10px 4px;border-radius:8px;border:1px solid var(--border);background:var(--surface3);color:var(--muted);text-align:center;cursor:pointer;font-size:12px;}
+  .filter-chip.active{border-color:var(--pink);color:var(--text);background:var(--surface2);}
+
+  .export-bar{margin:20px 16px 0;}
+  .export-btn{width:100%;padding:15px;border-radius:12px;border:none;background:linear-gradient(100deg,var(--pink),var(--gold));color:#2a0a1a;font-family:var(--font-display);font-weight:700;font-size:15px;letter-spacing:.4px;cursor:pointer;}
+  .export-btn:disabled{background:var(--surface3);color:var(--muted);cursor:wait;}
+  .status{text-align:center;font-size:13px;color:var(--muted);margin-top:10px;min-height:18px;}
+  .download-link{display:none;margin-top:12px;width:100%;padding:15px;border-radius:12px;background:var(--purple);color:#1a0a2a;text-decoration:none;text-align:center;font-family:var(--font-display);font-weight:700;font-size:15px;}
+  .reset-link{display:block;text-align:center;margin-top:14px;font-size:12px;color:var(--muted);cursor:pointer;}
+  .reset-link:hover{color:var(--pink);}
+
+  footer{text-align:center;padding:26px 16px 6px;font-size:12px;color:var(--muted);}
+  footer b{color:var(--pink);}
+
+  .rec-indicator{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;color:var(--muted);margin:4px 16px 0;visibility:hidden;}
+  .rec-indicator.on{visibility:visible;color:var(--pink);}
+  .rec-dot{width:8px;height:8px;border-radius:50%;background:var(--pink);animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.25;}}
+
+  /* language scoping — only elements wrapped in .i18n switch fully; others stay bilingual TH/LO */
+  body[data-lang="multi"] .i18n .en{display:none;}
+  body[data-lang="th"] .i18n .lo, body[data-lang="th"] .i18n .en{display:none;}
+  body[data-lang="lo"] .i18n .th, body[data-lang="lo"] .i18n .en{display:none;}
+  body[data-lang="en"] .i18n .th, body[data-lang="en"] .i18n .lo{display:none;}
+
+  /* modal */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;align-items:flex-end;justify-content:center;}
+  .modal-overlay.active{display:flex;}
+  .modal-card{
+    width:100%;max-width:520px;background:var(--surface);border-top:1px solid var(--border);border-radius:20px 20px 0 0;
+    padding:22px 20px 26px;max-height:82vh;overflow-y:auto;
+  }
+  .modal-card h2{font-family:var(--font-display);font-size:18px;margin:0 0 18px;
+    background:linear-gradient(90deg,var(--pink),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .set-group{margin-bottom:20px;}
+  .set-group>.st{font-size:13px;color:var(--muted);margin-bottom:10px;font-weight:500;}
+  .seg{display:flex;gap:8px;flex-wrap:wrap;}
+  .seg-btn{padding:9px 14px;border-radius:999px;border:1px solid var(--border);background:var(--surface3);color:var(--muted);font-size:13px;cursor:pointer;}
+  .seg-btn.active{border-color:var(--pink);color:var(--text);background:var(--surface2);}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;}
+  .toggle-row:last-child{border-bottom:none;}
+  .switch{width:42px;height:24px;border-radius:999px;background:var(--surface3);position:relative;cursor:pointer;flex:none;border:1px solid var(--border);}
+  .switch.on{background:var(--pink);border-color:var(--pink);}
+  .switch .knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s;}
+  .switch.on .knob{left:20px;}
+  .about-box{font-size:12px;color:var(--muted);line-height:1.7;}
+  .modal-close{width:100%;margin-top:20px;padding:13px;border-radius:10px;border:1px solid var(--border);background:var(--surface3);color:var(--text);font-family:var(--font-body);cursor:pointer;}
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);
+    border:1px solid var(--pink);color:var(--text);padding:12px 18px;border-radius:10px;font-size:13px;
+    opacity:0;transition:.2s;z-index:80;max-width:88vw;text-align:center;pointer-events:none;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @media(max-width:520px){ .brand h1{font-size:22px;} .tab-btn .th{font-size:12px;} }
+  .visually-hidden{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none;left:0;top:0;}
+</style>
+</head>
+<body data-lang="multi">
+
+<div class="topbar">
+  <div class="back-btn" id="backBtn">←</div>
+  <div class="back-btn" id="flagBtn">⚑</div>
+</div>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="brand-badge">👹</div>
+      <div>
+        <h1>LAOS Edit</h1>
+        <div class="tagline">v1.1 — Master Your Content</div>
+      </div>
+    </div>
+    <div class="pill-row">
+      <div class="pill-btn i18n" id="settingsBtn">⚙️ <span class="th">ตั้งค่า</span><span class="lo">ຕັ້ງຄ່າ</span><span class="en">Settings</span></div>
+      <div class="pill-btn i18n" id="themeBtn">🌙 <span class="th" id="themeLabelTh">มืด</span><span class="lo" id="themeLabelLo">ມືດ</span><span class="en" id="themeLabelEn">Dark</span></div>
+    </div>
+  </header>
+
+  <button class="upload-btn i18n" id="uploadBtn">📤 <span class="th">อัพโหลดวีดีโอ</span><span class="lo">ອັບໂຫລດວີດີໂອ</span><span class="en">Upload Video</span></button>
+  <input type="file" id="videoInput" accept="video/*">
+
+  <div class="empty-state i18n" id="emptyState">
+    <div class="bolt">⚡</div>
+    <div class="msg"><span class="th">กรุณาอัพโหลดวีดีโอก่อน</span><span class="lo">ກະລຸນາອັບໂຫລດວີດີໂອກ່ອນ</span><span class="en">Please upload a video first</span></div>
+  </div>
+
+  <div class="rec-indicator" id="recIndicator"><span class="rec-dot"></span><span>REC — <span id="recTime">0:00</span></span></div>
+
+  <div class="editor" id="editor">
+    <div class="stage">
+      <div class="canvas-frame"><canvas id="canvas"></canvas></div>
+      <div class="transport">
+        <button class="play-btn" id="playBtn">▶</button>
+        <span class="timecode" id="timeNow">0:00</span>
+        <input type="range" class="seek" id="seekBar" min="0" max="100" step="0.01" value="0">
+        <span class="timecode" id="timeTotal">0:00</span>
+      </div>
+      <div class="timeline" id="timeline">
+        <div class="trim-region" id="trimRegion"></div>
+        <div class="playhead" id="playheadMark"></div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab-btn active" data-tab="trim"><span class="th">ตัดต่อ</span><span class="lo">ຕັດຕໍ່</span></div>
+      <div class="tab-btn" data-tab="music"><span class="th">เพลง</span><span class="lo">ເພງ</span></div>
+      <div class="tab-btn" data-tab="text"><span class="th">ข้อความ</span><span class="lo">ຂໍ້ຄວາມ</span></div>
+      <div class="tab-btn" data-tab="fx"><span class="th">เอฟเฟกต์</span><span class="lo">ເອັບເຟັກ</span></div>
+    </div>
+
+    <div class="panel active" data-panel="trim">
+      <div class="field">
+        <label><span><span class="th">จุดเริ่มตัด</span> <span class="lo">/ ຈຸດເລີ່ມຕັດ</span></span><span class="val" id="startVal">0:00</span></label>
+        <input type="range" id="startRange" min="0" max="100" step="0.1" value="0">
+      </div>
+      <div class="field">
+        <label><span><span class="th">จุดสิ้นสุด</span> <span class="lo">/ ຈຸດສິ້ນສຸດ</span></span><span class="val" id="endVal">0:00</span></label>
+        <input type="range" id="endRange" min="0" max="100" step="0.1" value="100">
+      </div>
+      <div class="hint-small"><span class="th">ช่วงที่เลือกไว้คือส่วนที่จะถูกส่งออก</span><span class="lo"> / ໄລຍະທີ່ເລືອກໄວ້ຄືສ່ວນທີ່ຈະຖືກສົ່ງອອກ</span></div>
+    </div>
+
+    <div class="panel" data-panel="music">
+      <div class="field">
+        <label><span><span class="th">เพิ่มเพลงประกอบ</span> <span class="lo">/ ເພີ່ມເພງປະກອບ</span></span></label>
+        <div class="upload-mini" id="musicUploadBtn">🎵 <span class="th">เลือกไฟล์เพลง</span> <span class="lo">/ ເລືອກໄຟລ໌ເພງ</span></div>
+        <input type="file" id="musicInput" accept="audio/*" style="display:none;">
+        <div class="file-tag" id="musicFileTag"></div>
+      </div>
+      <div class="field">
+        <label><span><span class="th">ระดับเสียงวิดีโอต้นฉบับ</span> <span class="lo">/ ລະດັບສຽງວີດີໂອ</span></span><span class="val" id="videoVolVal">100%</span></label>
+        <input type="range" id="videoVolRange" min="0" max="100" step="1" value="100">
+      </div>
+      <div class="field">
+        <label><span><span class="th">ระดับเสียงเพลง</span> <span class="lo">/ ລະດັບສຽງເພງ</span></span><span class="val" id="musicVolVal">70%</span></label>
+        <input type="range" id="musicVolRange" min="0" max="100" step="1" value="70">
+      </div>
+    </div>
+
+    <div class="panel" data-panel="text">
+      <div class="overlay-list" id="overlayList"></div>
+      <div class="add-btn" id="addOverlayBtn">+ <span class="th">เพิ่มข้อความ</span> <span class="lo">/ ເພີ່ມຂໍ້ຄວາມ</span></div>
+      <div id="overlayEditor" style="display:none;margin-top:18px;">
+        <div class="field">
+          <label><span><span class="th">ข้อความ</span> <span class="lo">/ ຂໍ້ຄວາມ</span></span></label>
+          <input type="text" id="ovText" placeholder="พิมพ์ข้อความ / ພິມຂໍ້ຄວາມ">
+        </div>
+        <div class="row">
+          <div class="field"><label><span class="th">สี</span> <span class="lo">/ ສີ</span></label><input type="color" id="ovColor" value="#ffffff"></div>
+          <div class="field"><label><span><span class="th">ขนาด</span> <span class="lo">/ ຂະໜາດ</span></span><span class="val" id="ovSizeVal">44</span></label><input type="range" id="ovSize" min="16" max="100" step="1" value="44"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label><span><span class="th">เริ่มแสดง</span> <span class="lo">/ ເລີ່ມສະແດງ</span></span><span class="val" id="ovStartVal">0:00</span></label><input type="range" id="ovStart" min="0" max="100" step="0.1" value="0"></div>
+          <div class="field"><label><span><span class="th">สิ้นสุด</span> <span class="lo">/ ສິ້ນສຸດ</span></span><span class="val" id="ovEndVal">0:00</span></label><input type="range" id="ovEnd" min="0" max="100" step="0.1" value="100"></div>
+        </div>
+        <div class="hint-small"><span class="th">แตะที่ภาพตัวอย่างด้านบนเพื่อวางตำแหน่งข้อความ</span><span class="lo"> / ແຕະໃສ່ຮູບຕົວຢ່າງເພື່ອວາງຕຳແໜ່ງຂໍ້ຄວາມ</span></div>
+      </div>
+    </div>
+
+    <div class="panel" data-panel="fx">
+      <div class="filter-grid" id="filterGrid">
+        <div class="filter-chip active" data-filter="none"><span class="th">ไม่มี</span></div>
+        <div class="filter-chip" data-filter="grayscale"><span class="th">ขาวดำ</span></div>
+        <div class="filter-chip" data-filter="sepia"><span class="th">ซีเปีย</span></div>
+        <div class="filter-chip" data-filter="vintage"><span class="th">วินเทจ</span></div>
+        <div class="filter-chip" data-filter="cool"><span class="th">โทนเย็น</span></div>
+        <div class="filter-chip" data-filter="warm"><span class="th">โทนอุ่น</span></div>
+      </div>
+      <div class="field"><label><span><span class="th">ความสว่าง</span> <span class="lo">/ ຄວາມສະຫວ່າງ</span></span><span class="val" id="brightVal">100%</span></label><input type="range" id="brightRange" min="40" max="160" step="1" value="100"></div>
+      <div class="field"><label><span><span class="th">คอนทราสต์</span> <span class="lo">/ ຄອນທຣາສ</span></span><span class="val" id="contrastVal">100%</span></label><input type="range" id="contrastRange" min="40" max="160" step="1" value="100"></div>
+      <div class="field"><label><span><span class="th">ความอิ่มตัวสี</span> <span class="lo">/ ຄວາມອີ່ມຕົວສີ</span></span><span class="val" id="satVal">100%</span></label><input type="range" id="satRange" min="0" max="200" step="1" value="100"></div>
+    </div>
+
+    <div class="export-bar">
+      <button class="export-btn i18n" id="exportBtn"><span class="th">ส่งออกวีดีโอ</span><span class="lo">ດາວໂຫລດວີດີໂອ</span><span class="en">Export Video</span></button>
+      <div class="status" id="statusText"></div>
+      <a class="download-link" id="downloadLink"><span class="th">แตะเพื่อบันทึกไฟล์</span> <span class="lo">/ ແຕະເພື່ອບັນທຶກໄຟລ໌</span></a>
+      <div class="reset-link" id="resetLink"><span class="th">เริ่มต้นใหม่</span> <span class="lo">/ ເລີ່ມຕົ້ນໃໝ່</span></div>
+    </div>
+  </div>
+
+  <footer>
+    👹 <b>LAOS Edit v1.1</b> — Master Your Content ⚡ | © 2026 Lao Gaming<br>
+    <span class="i18n"><span class="th">กด Space=เล่น/หยุด • Ctrl+S=ส่งออก</span><span class="lo">ກົດ Space=ຫຼິ້ນ/ຢຸດ • Ctrl+S=ສົ່ງອອກ</span><span class="en">Space=Play/Pause • Ctrl+S=Export</span></span>
+  </footer>
+</div>
+
+<!-- Settings modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal-card">
+    <h2>⚙️ <span class="i18n"><span class="th">ตั้งค่า</span><span class="lo">ຕັ້ງຄ່າ</span><span class="en">Settings</span></span></h2>
+
+    <div class="set-group">
+      <div class="st i18n"><span class="th">ธีมการแสดงผล</span><span class="lo">ໂຕມການສະແດງຜົນ</span><span class="en">Display Theme</span></div>
+      <div class="seg">
+        <div class="seg-btn active" data-theme="dark">🌙 Dark</div>
+        <div class="seg-btn" data-theme="light">☀️ Light</div>
+      </div>
+    </div>
+
+    <div class="set-group">
+      <div class="st i18n"><span class="th">ภาษา</span><span class="lo">ພາສາ</span><span class="en">Language</span></div>
+      <div class="seg">
+        <div class="seg-btn" data-lang="th">ไทย</div>
+        <div class="seg-btn" data-lang="lo">ລາວ</div>
+        <div class="seg-btn active" data-lang="multi">ไทย+ລາວ</div>
+        <div class="seg-btn" data-lang="en">English</div>
+      </div>
+    </div>
+
+    <div class="set-group">
+      <div class="st i18n"><span class="th">การแจ้งเตือน</span><span class="lo">ການແຈ້ງເຕືອນ</span><span class="en">Notifications</span></div>
+      <div class="toggle-row">
+        <span class="i18n"><span class="th">แจ้งเตือนการแก้ไข</span><span class="lo">ແຈ້ງເຕືອນການແກ້ໄຂ</span><span class="en">Edit alerts</span></span>
+        <div class="switch on" data-toggle="edits"><div class="knob"></div></div>
+      </div>
+      <div class="toggle-row">
+        <span class="i18n"><span class="th">เสียง/สั่น</span><span class="lo">ສຽງ/ສັ່ນ</span><span class="en">Sound / vibration</span></span>
+        <div class="switch" data-toggle="sound"><div class="knob"></div></div>
+      </div>
+    </div>
+
+    <div class="set-group">
+      <div class="st i18n"><span class="th">เกี่ยวกับ</span><span class="lo">ກ່ຽວກັບ</span><span class="en">About</span></div>
+      <div class="about-box i18n">
+        <span class="th">LAOS Edit เวอร์ชั่น 1.1 — เว็บตัดต่อวิดีโอสไตล์ลาวมุขมิตร ตัด/ต่อ ใส่เพลง ข้อความ และเอฟเฟกต์ ทำงานทั้งหมดในเบราว์เซอร์<br>© 2026 Lao Gaming</span>
+        <span class="lo">LAOS Edit ລຸ້ນ 1.1 — ເວັບຕັດຕໍ່ວີດີໂອ ຕັດ, ໃສ່ເພງ, ຂໍ້ຄວາມ ແລະ ເອັບເຟັກ ເຮັດວຽກທັງໝົດໃນບຣາວເຊີ<br>© 2026 Lao Gaming</span>
+        <span class="en">LAOS Edit v1.1 — a browser-based video editor. Trim, add music, text and effects, all in your browser.<br>© 2026 Lao Gaming</span>
+      </div>
+    </div>
+
+    <button class="modal-close i18n" id="closeSettings"><span class="th">ปิด</span><span class="lo">ປິດ</span><span class="en">Close</span></button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<video id="srcVideo" class="visually-hidden" playsinline webkit-playsinline preload="metadata"></video>
+<audio id="srcMusic" class="visually-hidden" loop preload="metadata"></audio>
+
+<script>
+(function(){
+  const videoEl = document.getElementById('srcVideo');
+  const musicEl = document.getElementById('srcMusic');
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const editor = document.getElementById('editor');
+  const emptyState = document.getElementById('emptyState');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const videoInput = document.getElementById('videoInput');
+
+  let duration=0, trimStart=0, trimEnd=0;
+  let overlays=[], selectedOverlayId=null, overlayCounter=0;
+  let filterPreset='none', brightness=100, contrast=100, saturation=100;
+  let videoVol=1, musicVol=0.7;
+  let audioCtx, gainVideo, gainMusic, streamDest, audioReady=false;
+  let rafId=null, recording=false, hasMusic=false;
+
+  const fmt = s => { s=Math.max(0,s||0); const m=Math.floor(s/60); const sec=Math.floor(s%60); return m+':'+(sec<10?'0':'')+sec; };
+
+  function toast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.classList.add('show');
+    clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2600);
+  }
+
+  // ---------- Upload ----------
+  uploadBtn.addEventListener('click', ()=>videoInput.click());
+  videoInput.addEventListener('change', e=>{ if(e.target.files[0]) loadVideo(e.target.files[0]); });
+
+  function loadVideo(file){
+    toast(document.body.dataset.lang==='en' ? 'Loading video…' : document.body.dataset.lang==='lo' ? 'ກຳລັງໂຫລດວີດີໂອ...' : 'กำลังโหลดวิดีโอ...');
+    const url = URL.createObjectURL(file);
+    let settled=false;
+    const cleanup=()=>{ videoEl.removeEventListener('loadedmetadata',onReady); videoEl.removeEventListener('loadeddata',onReady); videoEl.removeEventListener('error',onError); clearTimeout(timeoutId); };
+    const onReady=()=>{
+      if(settled)return; settled=true; cleanup();
+      duration=videoEl.duration;
+      if(!isFinite(duration)||duration<=0){ toast('ไม่พบความยาววิดีโอ / duration error'); return; }
+      trimStart=0; trimEnd=duration;
+      let w=videoEl.videoWidth||1280, h=videoEl.videoHeight||720;
+      const maxW=1280; if(w>maxW){ h=Math.round(h*(maxW/w)); w=maxW; }
+      canvas.width=w; canvas.height=h;
+      uploadBtn.style.display='none'; emptyState.style.display='none';
+      editor.classList.add('active');
+      document.getElementById('seekBar').max=duration;
+      document.getElementById('startRange').max=duration;
+      document.getElementById('endRange').max=duration; document.getElementById('endRange').value=duration;
+      document.getElementById('ovStart').max=duration; document.getElementById('ovEnd').max=duration;
+      document.getElementById('timeTotal').textContent=fmt(duration);
+      updateTrimUI(); drawFrame();
+    };
+    const onError=()=>{
+      if(settled)return; settled=true; cleanup();
+      const codeMap={1:'ถูกยกเลิก',2:'เครือข่ายผิดพลาด',3:'ถอดรหัสไฟล์ไม่ได้ (โคเดกไม่รองรับ)',4:'ไฟล์นี้ไม่รองรับ'};
+      const err=videoEl.error;
+      toast('เปิดไฟล์ไม่ได้: '+(err?(codeMap[err.code]||('code '+err.code)):'ไม่ทราบสาเหตุ'));
+    };
+    const timeoutId=setTimeout(()=>{ if(settled)return; settled=true; cleanup(); toast('โหลดนานเกินไป ลองไฟล์อื่น'); },15000);
+    videoEl.addEventListener('loadedmetadata',onReady);
+    videoEl.addEventListener('loadeddata',onReady);
+    videoEl.addEventListener('error',onError);
+    videoEl.muted=false; videoEl.src=url; videoEl.load();
+  }
+
+  // ---------- Audio graph ----------
+  function ensureAudio(){
+    if(audioReady)return;
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    const srcV=audioCtx.createMediaElementSource(videoEl);
+    gainVideo=audioCtx.createGain(); gainVideo.gain.value=videoVol;
+    streamDest=audioCtx.createMediaStreamDestination();
+    srcV.connect(gainVideo); gainVideo.connect(audioCtx.destination); gainVideo.connect(streamDest);
+    const srcM=audioCtx.createMediaElementSource(musicEl);
+    gainMusic=audioCtx.createGain(); gainMusic.gain.value=musicVol;
+    srcM.connect(gainMusic); gainMusic.connect(audioCtx.destination); gainMusic.connect(streamDest);
+    audioReady=true;
+  }
+
+  // ---------- Playback ----------
+  const playBtn=document.getElementById('playBtn');
+  function togglePlay(){
+    if(!duration)return;
+    ensureAudio(); if(audioCtx.state==='suspended') audioCtx.resume();
+    if(videoEl.paused) playFrom(videoEl.currentTime<trimStart||videoEl.currentTime>=trimEnd?trimStart:videoEl.currentTime);
+    else pausePlayback();
+  }
+  playBtn.addEventListener('click', togglePlay);
+  function playFrom(t){
+    videoEl.currentTime=t; if(hasMusic) musicEl.currentTime=t;
+    videoEl.play(); if(hasMusic) musicEl.play();
+    playBtn.textContent='❚❚'; loop();
+  }
+  function pausePlayback(){
+    videoEl.pause(); if(hasMusic) musicEl.pause();
+    playBtn.textContent='▶'; if(rafId) cancelAnimationFrame(rafId);
+  }
+  videoEl.addEventListener('timeupdate', ()=>{
+    if(!videoEl.paused && videoEl.currentTime>=trimEnd){ if(recording)return; playFrom(trimStart); }
+  });
+  function loop(){ drawFrame(); updatePlayheadUI(); if(!videoEl.paused) rafId=requestAnimationFrame(loop); }
+  document.getElementById('seekBar').addEventListener('input', e=>{
+    const t=parseFloat(e.target.value); videoEl.currentTime=t; if(hasMusic) musicEl.currentTime=t; drawFrame(); updatePlayheadUI();
+  });
+
+  // ---------- Trim ----------
+  const startRange=document.getElementById('startRange'), endRange=document.getElementById('endRange');
+  startRange.addEventListener('input', ()=>{ trimStart=Math.min(parseFloat(startRange.value), trimEnd-0.2); startRange.value=trimStart; videoEl.currentTime=trimStart; drawFrame(); updateTrimUI(); });
+  endRange.addEventListener('input', ()=>{ trimEnd=Math.max(parseFloat(endRange.value), trimStart+0.2); endRange.value=trimEnd; videoEl.currentTime=trimEnd; drawFrame(); updateTrimUI(); });
+  function updateTrimUI(){
+    document.getElementById('startVal').textContent=fmt(trimStart);
+    document.getElementById('endVal').textContent=fmt(trimEnd);
+    const region=document.getElementById('trimRegion');
+    const p1=(trimStart/duration)*100, p2=(trimEnd/duration)*100;
+    region.style.left=p1+'%'; region.style.width=(p2-p1)+'%';
+  }
+  function updatePlayheadUI(){
+    const p=duration?(videoEl.currentTime/duration)*100:0;
+    document.getElementById('playheadMark').style.left=p+'%';
+    document.getElementById('seekBar').value=videoEl.currentTime;
+    document.getElementById('timeNow').textContent=fmt(videoEl.currentTime);
+  }
+
+  // ---------- Tabs ----------
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelector('.panel[data-panel="'+btn.dataset.tab+'"]').classList.add('active');
+    });
+  });
+
+  // ---------- Music ----------
+  document.getElementById('musicUploadBtn').addEventListener('click', ()=>document.getElementById('musicInput').click());
+  document.getElementById('musicInput').addEventListener('change', e=>{
+    const f=e.target.files[0]; if(!f)return;
+    musicEl.src=URL.createObjectURL(f); hasMusic=true;
+    document.getElementById('musicFileTag').textContent=f.name;
+  });
+  document.getElementById('videoVolRange').addEventListener('input', e=>{ videoVol=e.target.value/100; document.getElementById('videoVolVal').textContent=e.target.value+'%'; if(gainVideo) gainVideo.gain.value=videoVol; });
+  document.getElementById('musicVolRange').addEventListener('input', e=>{ musicVol=e.target.value/100; document.getElementById('musicVolVal').textContent=e.target.value+'%'; if(gainMusic) gainMusic.gain.value=musicVol; });
+
+  // ---------- Text overlays ----------
+  function addOverlay(){
+    overlayCounter++;
+    const ov={id:overlayCounter,text:'ข้อความใหม่ / ຂໍ້ຄວາມໃໝ່',color:'#ffffff',size:44,x:50,y:82,tStart:trimStart,tEnd:trimEnd};
+    overlays.push(ov); selectedOverlayId=ov.id; renderOverlayList(); renderOverlayEditor(); drawFrame();
+  }
+  document.getElementById('addOverlayBtn').addEventListener('click', addOverlay);
+  function renderOverlayList(){
+    const list=document.getElementById('overlayList'); list.innerHTML='';
+    overlays.forEach(ov=>{
+      const item=document.createElement('div');
+      item.className='overlay-item'+(ov.id===selectedOverlayId?' sel':'');
+      item.innerHTML='<span class="txt">'+escapeHtml(ov.text)+'</span><span class="del">×</span>';
+      item.addEventListener('click', e=>{
+        if(e.target.classList.contains('del')){
+          overlays=overlays.filter(o=>o.id!==ov.id);
+          if(selectedOverlayId===ov.id) selectedOverlayId=overlays.length?overlays[0].id:null;
+          renderOverlayList(); renderOverlayEditor(); drawFrame(); return;
+        }
+        selectedOverlayId=ov.id; renderOverlayList(); renderOverlayEditor(); drawFrame();
+      });
+      list.appendChild(item);
+    });
+  }
+  function getSelectedOverlay(){ return overlays.find(o=>o.id===selectedOverlayId); }
+  function renderOverlayEditor(){
+    const box=document.getElementById('overlayEditor'); const ov=getSelectedOverlay();
+    if(!ov){ box.style.display='none'; return; }
+    box.style.display='block';
+    document.getElementById('ovText').value=ov.text;
+    document.getElementById('ovColor').value=ov.color;
+    document.getElementById('ovSize').value=ov.size; document.getElementById('ovSizeVal').textContent=ov.size;
+    document.getElementById('ovStart').max=duration; document.getElementById('ovStart').value=ov.tStart;
+    document.getElementById('ovEnd').max=duration; document.getElementById('ovEnd').value=ov.tEnd;
+    document.getElementById('ovStartVal').textContent=fmt(ov.tStart);
+    document.getElementById('ovEndVal').textContent=fmt(ov.tEnd);
+  }
+  document.getElementById('ovText').addEventListener('input', e=>{ const ov=getSelectedOverlay(); if(!ov)return; ov.text=e.target.value||' '; renderOverlayList(); drawFrame(); });
+  document.getElementById('ovColor').addEventListener('input', e=>{ const ov=getSelectedOverlay(); if(!ov)return; ov.color=e.target.value; drawFrame(); });
+  document.getElementById('ovSize').addEventListener('input', e=>{ const ov=getSelectedOverlay(); if(!ov)return; ov.size=parseInt(e.target.value); document.getElementById('ovSizeVal').textContent=ov.size; drawFrame(); });
+  document.getElementById('ovStart').addEventListener('input', e=>{ const ov=getSelectedOverlay(); if(!ov)return; ov.tStart=Math.min(parseFloat(e.target.value), ov.tEnd-0.1); document.getElementById('ovStartVal').textContent=fmt(ov.tStart); drawFrame(); });
+  document.getElementById('ovEnd').addEventListener('input', e=>{ const ov=getSelectedOverlay(); if(!ov)return; ov.tEnd=Math.max(parseFloat(e.target.value), ov.tStart+0.1); document.getElementById('ovEndVal').textContent=fmt(ov.tEnd); drawFrame(); });
+  canvas.addEventListener('click', e=>{
+    const ov=getSelectedOverlay(); if(!ov)return;
+    const rect=canvas.getBoundingClientRect();
+    ov.x=((e.clientX-rect.left)/rect.width)*100; ov.y=((e.clientY-rect.top)/rect.height)*100;
+    drawFrame();
+  });
+  function escapeHtml(s){ return s.replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  // ---------- Effects ----------
+  document.querySelectorAll('.filter-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active'); filterPreset=chip.dataset.filter; drawFrame();
+    });
+  });
+  document.getElementById('brightRange').addEventListener('input', e=>{ brightness=e.target.value; document.getElementById('brightVal').textContent=brightness+'%'; drawFrame(); });
+  document.getElementById('contrastRange').addEventListener('input', e=>{ contrast=e.target.value; document.getElementById('contrastVal').textContent=contrast+'%'; drawFrame(); });
+  document.getElementById('satRange').addEventListener('input', e=>{ saturation=e.target.value; document.getElementById('satVal').textContent=saturation+'%'; drawFrame(); });
+  function filterString(){
+    let base='';
+    if(filterPreset==='grayscale') base='grayscale(1) ';
+    else if(filterPreset==='sepia') base='sepia(0.8) ';
+    else if(filterPreset==='vintage') base='sepia(0.35) contrast(1.1) saturate(0.85) ';
+    else if(filterPreset==='cool') base='hue-rotate(-8deg) saturate(1.1) ';
+    else if(filterPreset==='warm') base='hue-rotate(8deg) saturate(1.15) ';
+    return base+'brightness('+brightness+'%) contrast('+contrast+'%) saturate('+saturation+'%)';
+  }
+
+  // ---------- Draw ----------
+  function drawFrame(){
+    if(!duration)return;
+    ctx.filter=filterString();
+    ctx.drawImage(videoEl,0,0,canvas.width,canvas.height);
+    ctx.filter='none';
+    const t=videoEl.currentTime;
+    overlays.forEach(ov=>{
+      if(t<ov.tStart||t>ov.tEnd)return;
+      const px=ov.size*(canvas.height/720);
+      ctx.font='700 '+px+'px "Noto Sans Thai","Noto Sans Lao",sans-serif';
+      ctx.fillStyle=ov.color; ctx.strokeStyle='rgba(0,0,0,0.6)'; ctx.lineWidth=px*0.12;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      const x=canvas.width*(ov.x/100), y=canvas.height*(ov.y/100);
+      ctx.strokeText(ov.text,x,y); ctx.fillText(ov.text,x,y);
+    });
+  }
+
+  // ---------- Export ----------
+  const exportBtn=document.getElementById('exportBtn');
+  const statusText=document.getElementById('statusText');
+  const downloadLink=document.getElementById('downloadLink');
+  const recIndicator=document.getElementById('recIndicator');
+
+  async function exportVideo(){
+    if(!duration){ toast('อัพโหลดวิดีโอก่อนนะ / upload a video first'); return; }
+    ensureAudio(); if(audioCtx.state==='suspended') await audioCtx.resume();
+    exportBtn.disabled=true; downloadLink.style.display='none';
+    statusText.innerHTML='<span class="th">กำลังประมวลผล...</span> <span class="lo">ກຳລັງປະມວນຜົນ...</span>';
+    recIndicator.classList.add('on');
+    pausePlayback(); videoEl.currentTime=trimStart; if(hasMusic) musicEl.currentTime=0;
+
+    const stream=canvas.captureStream(30);
+    streamDest.stream.getAudioTracks().forEach(t=>stream.addTrack(t));
+    let mime='video/webm;codecs=vp9,opus';
+    if(!MediaRecorder.isTypeSupported(mime)) mime='video/webm';
+    const recorder=new MediaRecorder(stream,{mimeType:mime});
+    const chunks=[];
+    recorder.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
+    const startedAt=Date.now();
+    const recTimer=setInterval(()=>{ document.getElementById('recTime').textContent=fmt((Date.now()-startedAt)/1000); },250);
+    const done=new Promise(resolve=>{ recorder.onstop=resolve; });
+
+    recording=true; recorder.start(); videoEl.play(); if(hasMusic) musicEl.play();
+    function renderLoop(){
+      drawFrame(); updatePlayheadUI();
+      if(videoEl.currentTime<trimEnd && recording){ requestAnimationFrame(renderLoop); }
+      else { recording=false; videoEl.pause(); if(hasMusic) musicEl.pause(); recorder.stop(); }
+    }
+    renderLoop();
+    await done; clearInterval(recTimer); recIndicator.classList.remove('on');
+    const blob=new Blob(chunks,{type:'video/webm'});
+    const url=URL.createObjectURL(blob);
+    downloadLink.href=url; downloadLink.download='laos-edit-export.webm'; downloadLink.style.display='block';
+    statusText.innerHTML='<span class="th">เสร็จแล้ว พร้อมดาวน์โหลด</span> <span class="lo">ສຳເລັດແລ້ວ ພ້ອມດາວໂຫລດ</span>';
+    exportBtn.disabled=false;
+  }
+  exportBtn.addEventListener('click', exportVideo);
+  document.getElementById('resetLink').addEventListener('click', ()=>location.reload());
+
+  // ---------- Settings modal ----------
+  const settingsModal=document.getElementById('settingsModal');
+  document.getElementById('settingsBtn').addEventListener('click', ()=>settingsModal.classList.add('active'));
+  document.getElementById('closeSettings').addEventListener('click', ()=>settingsModal.classList.remove('active'));
+  settingsModal.addEventListener('click', e=>{ if(e.target===settingsModal) settingsModal.classList.remove('active'); });
+
+  function setTheme(mode){
+    document.body.classList.toggle('light', mode==='light');
+    document.querySelectorAll('[data-theme]').forEach(b=>b.classList.toggle('active', b.dataset.theme===mode));
+    const th = mode==='light' ? ['สว่าง','ສະຫວ່າງ','Light','☀️'] : ['มืด','ມືດ','Dark','🌙'];
+    document.getElementById('themeLabelTh').textContent=th[0];
+    document.getElementById('themeLabelLo').textContent=th[1];
+    document.getElementById('themeLabelEn').textContent=th[2];
+    document.getElementById('themeBtn').firstChild.textContent=th[3]+' ';
+  }
+  document.querySelectorAll('[data-theme]').forEach(b=>b.addEventListener('click', ()=>setTheme(b.dataset.theme)));
+  document.getElementById('themeBtn').addEventListener('click', ()=>setTheme(document.body.classList.contains('light')?'dark':'light'));
+
+  document.querySelectorAll('[data-lang]').forEach(b=>{
+    if(!b.classList.contains('seg-btn'))return;
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('.seg-btn[data-lang]').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      document.body.dataset.lang=b.dataset.lang;
+    });
+  });
+
+  document.querySelectorAll('.switch').forEach(sw=>{
+    sw.addEventListener('click', ()=>sw.classList.toggle('on'));
+  });
+
+  // ---------- Keyboard shortcuts ----------
+  document.addEventListener('keydown', e=>{
+    const tag=(document.activeElement && document.activeElement.tagName) || '';
+    if(tag==='INPUT' || tag==='TEXTAREA') return;
+    if(e.code==='Space'){ e.preventDefault(); togglePlay(); }
+    else if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='s'){ e.preventDefault(); exportVideo(); }
+    else if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z'){ e.preventDefault(); toast('Undo จะมาใน v1.2 / Undo coming in v1.2'); }
+  });
+
+  document.getElementById('backBtn').addEventListener('click', ()=>{ if(editor.classList.contains('active') || duration) location.reload(); });
+  document.getElementById('flagBtn').addEventListener('click', ()=>toast('รายงานปัญหา: ฟีเจอร์นี้จะมาเร็วๆนี้ / report feature coming soon'));
+
+  drawFrame();
+})();
+</script>
+</body>
+</html>
